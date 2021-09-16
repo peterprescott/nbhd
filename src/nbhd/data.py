@@ -5,6 +5,7 @@ import geopandas as gpd
 import networkx as nx
 
 from sqlalchemy import create_engine
+from sqlalchemy.exc import ResourceClosedError
 
 
 class Base():
