@@ -66,6 +66,21 @@ class Base():
             '''
         return self.query(sql)
 
+
+    def rename(self, table, new_name):
+
+        sql = f'''
+        ALTER TABLE {table}
+        RENAME TO {new_name}
+        '''
+        try:
+            self.query(sql)
+        except ResourceClosedError as e:
+            # this is expected
+            assert new_name in self.ls()
+            print('Table successfully renamed!')
+
+
     def select(self, table):
         if table in self.ls():
             sql = f'SELECT * FROM {table}'
