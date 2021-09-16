@@ -1,3 +1,7 @@
+'''
+Object-oriented database interactivity mediating the full power of SQL.
+'''
+
 import os
 
 import pandas as pd
@@ -90,6 +94,7 @@ class Base():
             print(f'`{table}` is not a table in the database.')
             return None
     
+
     def count(self, table, column=None):
         if column:
             column_values = self.distinct(column, 
@@ -105,6 +110,7 @@ class Base():
             sql = f'SELECT (COUNT(*)) FROM {table}'
             return self.query(sql)
     
+
     def percentile(self, table, numeric, column=None, categorical=None, percentile=0.5):
         if categorical and categorical != 'Total':
             condition = f"WHERE {column} LIKE '{categorical}' "
@@ -116,9 +122,11 @@ class Base():
         '''
         return self.query(sql)['percentile_cont'][0]
 
+
     def distinct(self, column, table):
         sql = f'SELECT DISTINCT({column}) FROM {table}'
         return self.query(sql)
+
 
     def spatial_sql(self, table, st_query, polygon, condition=None, crs=27700):
         if condition:
@@ -135,49 +143,6 @@ class Base():
         '''
         return sql
 
-    def contains(self, table, polygon):
-        sql = self.spatial_sql(table, 'contains', polygon)
-        return self.query(sql, spatial=True)
-
-    def crosses(self, table, polygon):
-        sql = self.spatial_sql(table, 'crosses', polygon)
-        return self.query(sql, spatial=True)
-
-    def disjoint(self, table, polygon):
-        sql = self.spatial_sql(table, 'disjoint', polygon)
-        return self.query(sql, spatial=True)
-
-    def equals(self, table, polygon):
-        sql = self.spatial_sql(table, 'equals', polygon)
-        return self.query(sql, spatial=True)
-
-    def intersects(self, table, polygon):
-        sql = self.spatial_sql(table, 'intersects', polygon)
-        return self.query(sql, spatial=True)
-
-    def overlaps(self, table, polygon):
-        sql = self.spatial_sql(table, 'overlaps', polygon)
-        return self.query(sql, spatial=True)
-
-    def touches(self, table, polygon):
-        sql = self.spatial_sql(table, 'touches', polygon)
-        return self.query(sql, spatial=True)
-
-    def within(self, table, polygon):
-        sql = self.spatial_sql(table, 'within', polygon)
-        return self.query(sql, spatial=True)
-
-    def covers(self, table, polygon):
-        sql = self.spatial_sql(table, 'covers', polygon)
-        return self.query(sql, spatial=True)
-
-    def coveredBy(self, table, polygon):
-        sql = self.spatial_sql(table, 'coveredBy', polygon)
-        return self.query(sql, spatial=True)
-
-    def containsProperly(self, table, polygon):
-        sql = self.spatial_sql(table, 'containsProperly', polygon)
-        return self.query(sql, spatial=True)
 
     def knn(self,
             table1,
@@ -244,4 +209,59 @@ class Base():
         '''
 
         return self.query(sql)
+
+
+    def contains(self, table, polygon):
+        sql = self.spatial_sql(table, 'contains', polygon)
+        return self.query(sql, spatial=True)
+
+
+    def crosses(self, table, polygon):
+        sql = self.spatial_sql(table, 'crosses', polygon)
+        return self.query(sql, spatial=True)
+
+
+    def disjoint(self, table, polygon):
+        sql = self.spatial_sql(table, 'disjoint', polygon)
+        return self.query(sql, spatial=True)
+
+
+    def equals(self, table, polygon):
+        sql = self.spatial_sql(table, 'equals', polygon)
+        return self.query(sql, spatial=True)
+
+
+    def intersects(self, table, polygon):
+        sql = self.spatial_sql(table, 'intersects', polygon)
+        return self.query(sql, spatial=True)
+
+
+    def overlaps(self, table, polygon):
+        sql = self.spatial_sql(table, 'overlaps', polygon)
+        return self.query(sql, spatial=True)
+
+
+    def touches(self, table, polygon):
+        sql = self.spatial_sql(table, 'touches', polygon)
+        return self.query(sql, spatial=True)
+
+
+    def within(self, table, polygon):
+        sql = self.spatial_sql(table, 'within', polygon)
+        return self.query(sql, spatial=True)
+
+
+    def covers(self, table, polygon):
+        sql = self.spatial_sql(table, 'covers', polygon)
+        return self.query(sql, spatial=True)
+
+
+    def coveredBy(self, table, polygon):
+        sql = self.spatial_sql(table, 'coveredBy', polygon)
+        return self.query(sql, spatial=True)
+
+
+    def containsProperly(self, table, polygon):
+        sql = self.spatial_sql(table, 'containsProperly', polygon)
+        return self.query(sql, spatial=True)
 
