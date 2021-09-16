@@ -3,6 +3,7 @@ Simplify the process of downloading and extracting Ordnance Survey data.
 '''
 
 import zipfile
+import os
 
 import fiona
 import pandas as pd
