@@ -9,51 +9,56 @@ import pandas as pd
 import geopandas as gpd
 import requests
 
-
 class OSDownloader():
+    '''Download Ordnance Survey Open Data'''
+
     def __init__(self,
                  download_immediately=True,
                  api_url='https://api.os.uk/downloads/v1/products'):
 
-        response = requests.get(api_url)
-        products = pd.DataFrame(response.json())
-        products['download'] = products.url.apply(
-            lambda x: requests.get(x).json()['downloadsUrl'])
-        # products['download2'] = products.download.apply(lambda x: requests.get(x).json())
-        products['formats'] = products.download2.apply(
-            lambda x: [e['format'] for e in x])
-        products['geopackage'] = products.formats.apply(
+        self.response = requests.get(api_url)
+        self.products = pd.DataFrame(self.response.json())
+        self.products['download'] = self.products.url.apply(
+            lambda x: requests.get(f'{x}/downloads').json())
+        self.products['formats'] = self.products.download.apply(
+            lambda x: [e['format'] for e in x ])
+        self.products['geopackage'] = self.products.formats.apply(
             lambda x: 'GeoPackage' in x)
-        products['geopackage_url'] = products.apply(
+        self.products['geopackage_url'] = self.products.apply(
             lambda x:
-            [e['url'] for e in x.download2 if e['format'] == 'GeoPackage'][0]
+            [e['url'] for e in x.download if e['format'] == 'GeoPackage'][0]
             if x.geopackage else None,
             axis=1)
+        if download_immediately:
+            self.products['downloaded'] = self.products.apply(
+                    lambda x: self.download_row(x, 'GeoPackage') if x.geopackage\
+                                else self.download_row(x, 'Shapefile'),
+                axis=1)
 
-        def download_row(row, _format):
-            print(row.id)
-            try:
-                [url] = [
-                    e['url'] for e in row.download2
-                    if e['format'].split(' ')[-1] == _format
-                ]
-                with open(f'../data/{row.id}{_format}.zip',
-                          'wb') as downloading:
-                    downloading.write(requests.get(url).content)
-                    downloading.close()
-                return "Done!"
-            except Exception as e:
-                print(e)
-
-        products['downloaded'] = products.apply(
-            lambda x: download_row(x, 'GeoPackage') if x.geopackage\
-            else download_row(x, 'Shapefile'),
-            axis=1
-        )
+    def download_row(self, row, _format):
+        print(row.id)
+        try:
+            [url] = [
+                e['url'] for e in row.download
+                if e['format'].split(' ')[-1] == _format
+            ]
+            with open(os.path.join('..','data',f'{row.id}{_format}.zip'),
+                      'wb') as downloading:
+                downloading.write(requests.get(url).content)
+                downloading.close()
+            return "Done!"
+        except Exception as e:
+            print(e)
 
 
-class ZippedGpkg():
+class ZippedGeoData():
+    '''
+    Extract downloaded zipped geographic data into our PostGis database.
+    '''
+
     def __init__(self, filepath, db_engine):
+
+        self.advise()
 
         self.filepath = filepath
         self.db_engine = db_engine
@@ -75,6 +80,22 @@ class ZippedGpkg():
                 for s in self.namelist if len(s.split('/')) > 2
             }
             self.type = 'Shapefile'
+
+    def advise(self):
+
+        advice = ('Instead of using this class, it is quicker'
+                ' and more efficient to use the `ogr2ogr` tool'
+                ' which can be easily plugged in using the `GDAL`'
+                ' Docker image. Something like this:\n\n'
+                '`docker run -it --net=host'
+                ' -v $PWD/data:/home/data osgeo/gdal` \n\n'
+                ' and then\n\n'
+                '`ogr2ogr -f "PostgreSQL" PG:"host=localhost'
+                ' user=piprescott dbname=nbhd port=5432"'
+                ' osopenuprn_202107.gpkg `'
+                )
+
+        print(advice)
 
     def unpack(self, layername, db_tablename):
 
