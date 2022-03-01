@@ -6,6 +6,7 @@ several helper functions that are necessary for it.
 import pandas as pd
 import geopandas as gpd
 import networkx as nx
+import matplotlib.pyplot as plt
 
 from shapely.geometry import Polygon
 
@@ -278,3 +279,34 @@ def label_connected_communities(all_streets_df, properties_df):
     )
 
     return all_streets_df, properties_df
+
+
+def plot_postcode_pixel(
+    postcode: str, min_community_size=5, ax=None, db: data.Base = None
+):
+    """
+    Plot connected communities in pixel containing given postcode.
+    """
+
+    if not db:
+        db = data.Base()
+
+    postcode_point = db.query(
+        f"SELECT geometry FROM names WHERE name1='{postcode.upper()}'", True
+    ).geometry[0]
+    pixel = db.intersects("pixels", postcode_point).geometry[0]
+    streets, properties = get_communities(db, pixel, quiet=False)
+
+    if not ax:
+        _, ax = plt.subplots(figsize=(20, 20))
+
+    streets.plot(ax=ax, color="grey")
+    streets.loc[streets.community_size >= min_community_size].plot(
+        "community", ax=ax, linewidth=2.5, linestyle="--", legend=True, cmap="tab20"
+    )
+    properties.plot(color="k", ax=ax, markersize=2)
+    properties.loc[properties.faceblock_community_size >= min_community_size].plot(
+        "community", ax=ax, markersize=1, cmap="tab20"
+    )
+
+    return ax.figure
