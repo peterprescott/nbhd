@@ -23,20 +23,7 @@ def get_communities(
 ):
     """
     This is the primary function to get networks of connected residential street communities.
-
-    Returns two GeoDataFrames.
-
-    The first, `streets` is like the dataframe returned by querying the
-    `roads` table, but it includes several other calculated features of
-    interest: `number_of_properties`, `length_per_property`,
-    `residential`, `short`, `short_or_residential`, `community`, and
-    `community_size`.
-
-    The second, `properties`, includes the `properties_id` and
-    `properties_geometry` columns directly relevant to each property, as
-    well as the `roads_id`, `startNode`, `endNode` and `roads_geometry`
-    of its nearest road, and the euclidean `dist`(ance) between them, as
-    well as its `community` label and `faceblock_community_size`.
+    Returns two GeoDataFrames, `streets` and `properties` with their `community` id.
     """
 
     # first we need all the roads in the polygon, so that those without
@@ -45,6 +32,11 @@ def get_communities(
     if not quiet:
         print("First getting all roads in polygon...")
     all_streets = db.intersects("roads", polygon)
+    
+    # rename id and drop unnecessary columns 
+    all_streets['roads_id'] = all_streets['id']
+    all_streets = all_streets[['roads_id', 'startNode', 'endNode', 'geometry']]
+    
     if not quiet:
         print(f"That is {len(all_streets)} road segments in total!")
 
@@ -53,6 +45,11 @@ def get_communities(
     residential_streets, properties = get_residential_streets_and_properties(
         db, polygon, residential_street_threshold
     )
+    # drop unnecessary columns
+    residential_streets = residential_streets[
+        ['roads_id', 'number_of_properties', 'length_per_property', 'residential']]
+    
+    
     if not quiet:
         print(
             (
@@ -62,13 +59,7 @@ def get_communities(
         )
     
     streets = gpd.GeoDataFrame(
-            residential_streets[
-            ['roads_id', 'number_of_properties', 'length_per_property', 'residential']
-                ].merge(
-                all_streets[
-            ['id', 'startNode', 'endNode', 'geometry']
-                       ],
-            left_on='roads_id', right_on='id', how='outer')
+            residential_streets.merge(all_streets, on='roads_id', how='outer')
         )
 
 
@@ -87,9 +78,12 @@ def get_communities(
     streets["community_size"] = streets.community.apply(
         lambda x: community_size_dict.get(x, 0)
     )
-    properties["faceblock_community_size"] = properties.community.apply(
+    properties["community_size"] = properties.community.apply(
         lambda x: community_size_dict.get(x, 0)
     )
+    
+    # drop unnecessary columns
+    properties = properties[['properties_id', 'community', 'community_size', 'geometry', 'roads_id']]
 
     return streets, properties
 
