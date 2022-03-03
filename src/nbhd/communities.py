@@ -305,7 +305,7 @@ def plot_postcode_pixel(
         "community", ax=ax, linewidth=2.5, linestyle="--", legend=True, cmap="tab20"
     )
     properties.plot(color="k", ax=ax, markersize=2)
-    properties.loc[properties.faceblock_community_size >= min_community_size].plot(
+    properties.loc[properties.community_size >= min_community_size].plot(
         "community", ax=ax, markersize=1, cmap="tab20"
     )
 
