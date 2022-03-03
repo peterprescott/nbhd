@@ -60,12 +60,18 @@ def get_communities(
                 " are residential."
             )
         )
+    
+    streets = gpd.GeoDataFrame(
+            residential_streets[
+            ['roads_id', 'number_of_properties', 'length_per_property', 'residential']
+                ].merge(
+                all_streets[
+            ['id', 'startNode', 'endNode', 'geometry']
+                       ],
+            left_on='roads_id', right_on='id', how='outer')
+        )
 
-    streets = pd.concat(
-        [all_streets.rename({"id": "roads_id"}, axis=1), residential_streets],
-        keys="roads_id",
-        join="outer",
-    )
+
     streets["short"] = streets.geometry.length < short_threshold
     streets["short_or_residential"] = streets.residential | streets.short
 
