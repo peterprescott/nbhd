@@ -86,10 +86,10 @@ class Base():
             print('Table successfully renamed!')
 
 
-    def select(self, table):
+    def select(self, table, spatial=True):
         if table in self.ls():
             sql = f'SELECT * FROM {table}'
-            return gpd.read_postgis(sql, self.engine, geom_col='geometry')
+            return self.query(sql=sql, spatial=spatial)
         else:
             print(f'`{table}` is not a table in the database.')
             return None
